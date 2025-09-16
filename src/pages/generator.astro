@@ -61,12 +61,15 @@ import Layout from "../layouts/Layout.astro";
         console.log("submitted: ", prompt);
         const svgContainer = document.getElementById("svg-container");
         let svgOutput = document.getElementById("svg-output");
+        svgContainer.innerHTML = `<span class="loading loading-ring loading-xl"></span>`;
+        generateButton.disabled = true;
         svgCode = await generateSVG(prompt);
         console.log("svgCode: ", svgCode);
         svgOutput.textContent = svgCode;
         svgContainer.innerHTML = svgCode;
         generateButton.disabled = false;
     }
+
     const generateButton = document.getElementById("generate-button");
     if (generateButton) {
         generateButton.addEventListener("click", handleSubmit);
