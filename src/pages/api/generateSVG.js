@@ -18,7 +18,7 @@ export const POST = async ({ request }) => {
 
     // ................
     const chatCompletion = await client.chat.completions.create({
-        model: NOM_MODEL,
+        model: "meta-llama/Llama-3.1-8B-Instruct:novita",
         messages: [
             {
                 role: "system",
@@ -43,3 +43,5 @@ export const POST = async ({ request }) => {
         headers: { "Content-Type": "application/json" },
     });
 };
+
+
