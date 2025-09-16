@@ -6,25 +6,12 @@ import Layout from "../layouts/Layout.astro";
     <main class="container mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">Générateur</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="card bg-base-100 shadow p-4">
-                <h2 class="text-lg font-semibold">Entrez le prompt</h2>
-                <textarea
-                    id="promptInput"
-                    class="textarea textarea-bordered w-full h-40 mt-4"
-                    placeholder="Tapez votre prompt ici..."></textarea>
-                <div class="mt-4 flex gap-2">
-                    <button id="generateBtn" class="btn btn-primary"
-                        >Générer</button
-                    >
-                </div>
-            </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="card bg-base-100 shadow p-4">
                 <h2 class="text-lg font-semibold">Code généré</h2>
                 <pre
                     id="codeOutput"
-                    class="rounded p-3 bg-base-200 overflow-auto h-72 mt-4"><code /></pre>
+                    class="rounded p-3 bg-base-200 overflow-auto h-72 mt-4"><code></code></pre>
             </div>
 
             <div class="card bg-base-100 shadow p-4">
@@ -34,6 +21,18 @@ import Layout from "../layouts/Layout.astro";
                     class="mt-4 flex items-center justify-center bg-white rounded h-72 p-4"
                 >
                 </div>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 shadow p-4 mt-6">
+            <h2 class="text-lg font-semibold">Entrez le prompt</h2>
+            <textarea
+                id="promptInput"
+                class="textarea textarea-bordered w-full h-40 mt-4"
+                placeholder="Tapez votre prompt ici..."></textarea>
+            <div class="mt-4 flex gap-2">
+                <button id="generateBtn" class="btn btn-primary">Générer</button
+                >
             </div>
         </div>
     </main>
