@@ -1,0 +1,42 @@
+---
+import PocketBase from "../../utils/pb";
+import { Collections } from "../../utils/pocketbase-types";
+import Layout from "../../layouts/Layout.astro";
+
+const pb = PocketBase;
+
+let svgs = [];
+
+try {
+    svgs = await pb.collection(Collections.Svg).getFullList(200, {
+        sort: "-created",
+    });
+} catch (error) {
+    console.error("Erreur lors de la récupération des SVGs :", error);
+}
+---
+
+<Layout>
+    <h1>Galerie des SVG</h1>
+
+    {
+        svgs.length > 0 ? (
+            <div
+                class="gallery"
+                style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem;"
+            >
+                {svgs.map((svg) => (
+                    <div
+                        class="card"
+                        style="padding:1rem; border:1px solid #ccc; border-radius:10px; text-align:center;"
+                    >
+                        <h3>{svg?.title}</h3>
+                        <div set:html={svg?.code_svg} />
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <p>Aucun SVG disponible.</p>
+        )
+    }
+</Layout>
