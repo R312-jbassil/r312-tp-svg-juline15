@@ -1,0 +1,61 @@
+---
+import pb from "../../utils/pb";
+import { Collections } from "../../utils/pocketbase-types";
+import Layout from "../../layouts/Layout.astro";
+
+const { id } = Astro.params; // Récupère l'id depuis l'URL
+
+let svg = null;
+
+try {
+    svg = await pb.collection(Collections.Svg).getOne(id);
+} catch (error) {
+    console.error("Erreur lors de la récupération du SVG :", error);
+}
+---
+
+<Layout>
+    {
+        svg ? (
+            <>
+                <h1>{svg.title}</h1>
+
+                <div
+                    class="svg-container"
+                    style="text-align:center; margin:2rem 0;"
+                >
+                    <div set:html={svg.code_svg} />
+                </div>
+
+                <div
+                    class="history"
+                    style="max-width:600px; margin:2rem auto; border-top:1px solid #ccc; padding-top:1rem;"
+                >
+                    <h2>Historique des échanges</h2>
+                    {svg.chat_history && svg.chat_history.length > 0 ? (
+                        svg.chat_history.map((item) => (
+                            <div
+                                class="history-item"
+                                style="margin-bottom:1rem; padding:0.5rem; border-bottom:1px solid #eee;"
+                            >
+                                <strong>{item.user || "Utilisateur"}</strong> :{" "}
+                                <span>{item.message}</span>
+                                <div>
+                                    <small>
+                                        {new Date(
+                                            item.created,
+                                        ).toLocaleString()}
+                                    </small>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>Aucun échange enregistré pour ce SVG.</p>
+                    )}
+                </div>
+            </>
+        ) : (
+            <p>SVG introuvable.</p>
+        )
+    }
+</Layout>
