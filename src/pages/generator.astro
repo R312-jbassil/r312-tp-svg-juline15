@@ -1,14 +1,21 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { ui } from "../i18n/ui.js";
+
+export const prerender = false;
+
+const locale = (Astro.locals.lang as "en" | "fr") ?? "en";
 ---
 
-<Layout title="Générateur">
+<Layout title={ui[locale].generator.title}>
     <main class="container mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-6">Générateur</h1>
+        <h1 class="text-2xl font-bold mb-6">{ui[locale].generator.title}</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="card bg-base-100 shadow p-4">
-                <h2 class="text-lg font-semibold">Code généré</h2>
+                <h2 class="text-lg font-semibold">
+                    {ui[locale].generator.codePlaceholder}
+                </h2>
                 <pre
                     id="svg-output"
                     class="rounded p-3 bg-base-200 overflow-auto h-72 mt-4"><code /></pre>
@@ -25,26 +32,32 @@ import Layout from "../layouts/Layout.astro";
         </div>
 
         <div class="card bg-base-100 shadow p-4 mt-6">
-            <h2 class="text-lg font-semibold">Entrez le prompt</h2>
+            <h2 class="text-lg font-semibold">
+                {ui[locale].generator.promptLabel}
+            </h2>
             <textarea
                 id="user-prompt"
                 class="textarea textarea-bordered w-full h-40 mt-4"
-                placeholder="Tapez votre prompt ici..."></textarea>
+                placeholder={ui[locale].generator.promptLabel}></textarea>
             <div class="mt-4 flex gap-2">
                 <button id="generate-button" class="btn btn-primary"
-                    >Générer</button
+                    >{ui[locale].generator.generateButton}</button
                 >
             </div>
         </div>
 
         <div>
-            <button class="btn btn-secondary m-2" id="edit-button">Edit</button>
+            <button class="btn btn-secondary m-2" id="edit-button"
+                >{ui[locale].generator.editButton}</button
+            >
         </div>
         <div>
             <button class="btn btn-secondary m-2" id="save-button">Save</button>
         </div>
         <div>
-            <a class="btn btn-secondary m-2" href="/gallery">Voir la galerie</a>
+            <a class="btn btn-secondary m-2" href="/gallery"
+                >{ui[locale].gallery.title}</a
+            >
         </div>
     </main>
 </Layout>

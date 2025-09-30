@@ -2,6 +2,11 @@
 import PocketBase from "../../utils/pb";
 import { Collections } from "../../utils/pocketbase-types";
 import Layout from "../../layouts/Layout.astro";
+import { ui } from "../../i18n/ui.js";
+
+export const prerender = false;
+
+const locale = (Astro.locals.lang as "en" | "fr") ?? "en";
 
 const pb = PocketBase;
 
@@ -16,9 +21,11 @@ try {
 }
 ---
 
-<Layout>
-    <a class="text-blue-800" href="/generator">Retour au générateur</a>
-    <h1>Galerie des SVG</h1>
+<Layout title={ui[locale].gallery.title}>
+    <a class="text-blue-800" href="/generator"
+        >{ui[locale].gallery.backToGenerator}</a
+    >
+    <h1>{ui[locale].gallery.title}</h1>
 
     {
         svgs.length > 0 ? (
@@ -35,13 +42,13 @@ try {
                         <h3>{svg?.title}</h3>
                         <div set:html={svg?.code_svg} />
                         <p class="text-sm text-gray-600 mt-2">
-                            Cliquez pour voir l'historique
+                            {ui[locale].gallery.clickHistory}
                         </p>
                     </div>
                 ))}
             </div>
         ) : (
-            <p>Aucun SVG disponible.</p>
+            <p>{ui[locale].gallery.noSvg}</p>
         )
     }
 </Layout>

@@ -23,6 +23,9 @@ export const ui = {
         gallery: {
             title: 'SVG Gallery',
             viewDetails: 'View Details',
+            backToGenerator: 'Back to generator',
+            clickHistory: 'Click to see history',
+            noSvg: 'No SVG available',
         }
     },
     fr: {
@@ -49,6 +52,9 @@ export const ui = {
         gallery: {
             title: 'Galerie SVG',
             viewDetails: 'Voir les détails',
-        }
+            backToGenerator: 'Retour au générateur',
+            clickHistory: 'Cliquez pour voir l\'historique',
+            noSvg: 'Aucun SVG disponible',
+        },
     },
 } 
