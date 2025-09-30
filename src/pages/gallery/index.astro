@@ -17,6 +17,7 @@ try {
 ---
 
 <Layout>
+    <a class="text-blue-800" href="/generator">Retour au générateur</a>
     <h1>Galerie des SVG</h1>
 
     {
@@ -28,10 +29,14 @@ try {
                 {svgs.map((svg) => (
                     <div
                         class="card"
-                        style="padding:1rem; border:1px solid #ccc; border-radius:10px; text-align:center;"
+                        style="padding:1rem; border:1px solid #ccc; border-radius:10px; text-align:center; cursor:pointer;"
+                        data-svg-id={svg.id}
                     >
                         <h3>{svg?.title}</h3>
                         <div set:html={svg?.code_svg} />
+                        <p class="text-sm text-gray-600 mt-2">
+                            Cliquez pour voir l'historique
+                        </p>
                     </div>
                 ))}
             </div>
@@ -40,3 +45,20 @@ try {
         )
     }
 </Layout>
+
+<script>
+    // Ajouter des écouteurs d'événements pour les cartes SVG
+    document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll(".card[data-svg-id]");
+
+        cards.forEach((card) => {
+            card.addEventListener("click", () => {
+                const svgId = card.getAttribute("data-svg-id");
+                if (svgId) {
+                    // Rediriger vers la page de détail avec l'ID du SVG
+                    window.location.href = `/gallery/${svgId}`;
+                }
+            });
+        });
+    });
+</script>

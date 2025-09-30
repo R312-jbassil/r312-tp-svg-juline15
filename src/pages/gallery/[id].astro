@@ -1,61 +1,366 @@
 ---
-import pb from "../../utils/pb";
-import { Collections } from "../../utils/pocketbase-types";
 import Layout from "../../layouts/Layout.astro";
+import pb from "../../utils/pb";
+import { Collections, type SvgRecord } from "../../utils/pocketbase-types";
 
-const { id } = Astro.params; // Récupère l'id depuis l'URL
+const id = Astro.params.id;
 
-let svg = null;
+if (!id) {
+    return Astro.redirect("/gallery");
+}
+
+let svg: SvgRecord;
 
 try {
     svg = await pb.collection(Collections.Svg).getOne(id);
 } catch (error) {
     console.error("Erreur lors de la récupération du SVG :", error);
+    return Astro.redirect("/gallery");
+}
+
+// Gestion des requêtes POST pour la mise à jour
+if (Astro.request.method === "POST") {
+    try {
+        const formData = await Astro.request.formData();
+        const newHistory = JSON.parse(formData.get("history") as string);
+        const newSvgCode = formData.get("svg_code") as string;
+
+        // Préparer les données à mettre à jour
+        const updateData: any = {
+            chat_history: newHistory,
+        };
+
+        // Ajouter le nouveau code SVG s'il est fourni
+        if (newSvgCode && newSvgCode.trim() !== "") {
+            updateData.code_svg = newSvgCode;
+        }
+
+        // Mettre à jour l'enregistrement dans PocketBase
+        await pb.collection(Collections.Svg).update(id, updateData);
+
+        // Vérifier si c'est une requête AJAX
+        const isAjaxRequest = Astro.request.headers
+            .get("accept")
+            ?.includes("application/json");
+
+        if (isAjaxRequest) {
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        // Rediriger pour éviter la re-soumission du formulaire
+        return Astro.redirect(`/gallery/${id}`);
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour :", error);
+
+        const isAjaxRequest = Astro.request.headers
+            .get("accept")
+            ?.includes("application/json");
+        if (isAjaxRequest) {
+            return new Response(
+                JSON.stringify({ error: "Erreur lors de la sauvegarde" }),
+                {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
+    }
 }
 ---
 
 <Layout>
-    {
-        svg ? (
-            <>
-                <h1>{svg.title}</h1>
+    <div class="mb-4">
+        <a class="text-blue-800" href="/gallery">← Retour à la galerie</a>
+        <h1 class="text-2xl font-bold mt-2">{svg?.title}</h1>
+    </div>
 
-                <div
-                    class="svg-container"
-                    style="text-align:center; margin:2rem 0;"
-                >
-                    <div set:html={svg.code_svg} />
-                </div>
+    <!-- Affichage du SVG actuel -->
+    <div id="svg-preview" class="mb-6 p-4 border rounded-lg bg-gray-50">
+        <h2 class="text-lg font-semibold mb-2">SVG actuel :</h2>
+        <div id="svg-display" set:html={svg?.code_svg} />
+    </div>
 
-                <div
-                    class="history"
-                    style="max-width:600px; margin:2rem auto; border-top:1px solid #ccc; padding-top:1rem;"
-                >
-                    <h2>Historique des échanges</h2>
-                    {svg.chat_history && svg.chat_history.length > 0 ? (
-                        svg.chat_history.map((item) => (
+    <div
+        id="chat-history"
+        class="flex flex-col gap-4 w-full mb-20 overflow-y-auto flex-grow"
+    >
+        {
+            Array.isArray(svg?.chat_history) && svg.chat_history.length > 0 ? (
+                svg.chat_history.map(
+                    (msg: { role: string; content: string }) => (
+                        <div
+                            class={`chat ${msg.role === "user" ? "chat-start" : "chat-end"}`}
+                        >
                             <div
-                                class="history-item"
-                                style="margin-bottom:1rem; padding:0.5rem; border-bottom:1px solid #eee;"
+                                class={`chat-bubble ${msg.role === "user" ? "bg-primary text-primary-content" : "bg-secondary text-secondary-content"}`}
                             >
-                                <strong>{item.user || "Utilisateur"}</strong> :{" "}
-                                <span>{item.message}</span>
-                                <div>
-                                    <small>
-                                        {new Date(
-                                            item.created,
-                                        ).toLocaleString()}
-                                    </small>
-                                </div>
+                                <pre class="whitespace-pre-wrap">
+                                    {msg.content}
+                                </pre>
                             </div>
-                        ))
-                    ) : (
-                        <p>Aucun échange enregistré pour ce SVG.</p>
-                    )}
-                </div>
-            </>
-        ) : (
-            <p>SVG introuvable.</p>
-        )
-    }
+                            <div class="chat-footer opacity-60 text-xs mt-1">
+                                {msg.role}
+                            </div>
+                        </div>
+                    ),
+                )
+            ) : (
+                <span class="text-error">
+                    Aucun historique de chat disponible.
+                </span>
+            )
+        }
+    </div>
+
+    <form
+        id="input-prompt-form"
+        class="flex flex-col gap-2 w-full fixed bottom-0 left-0 right-0 bg-base-300 p-4 shadow-lg"
+        method="POST"
+        autocomplete="off"
+    >
+        <input
+            type="hidden"
+            name="history"
+            value={JSON.stringify(svg?.chat_history || [])}
+        />
+        <input type="hidden" name="svg_code" value="" />
+        <input type="hidden" name="id" value={svg?.id} />
+        <div class="flex items-center gap-2">
+            <input
+                id="prompt-input"
+                name="editPrompt"
+                type="text"
+                class="input flex-grow"
+                placeholder="Entrez un prompt pour modifier le SVG..."
+                required
+            />
+            <button class="btn btn-primary" type="submit">Modifier</button>
+        </div>
+    </form>
 </Layout>
+
+<script>
+    //@ts-nocheck
+    const form = document.getElementById("input-prompt-form");
+    const svgPreview = document.getElementById("svg-preview");
+    const svgDisplay = document.getElementById("svg-display");
+    const chatHistory = document.getElementById("chat-history");
+    const historyInput = document.querySelector('input[name="history"]');
+    const svgCodeInput = document.querySelector('input[name="svg_code"]');
+
+    // Fonction pour générer le SVG à partir du prompt
+    async function generateSVG(prompt, currentSvg = "") {
+        try {
+            // Remplacez cette URL par votre endpoint d'API réel
+            const response = await fetch("/api/generate-svg", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: prompt.content,
+                    currentSvg: currentSvg, // Passer le SVG actuel pour les modifications
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Erreur lors de la génération du SVG");
+            }
+
+            const data = await response.json();
+            return (
+                data.svg ||
+                data.response ||
+                "Désolé, impossible de générer le SVG."
+            );
+        } catch (error) {
+            console.error("Erreur lors de la génération du SVG:", error);
+            return "Erreur lors de la génération du SVG. Veuillez réessayer.";
+        }
+    }
+
+    // Fonction pour extraire le code SVG propre
+    function extractSvgCode(response) {
+        // Chercher le SVG dans la réponse
+        const svgMatch = response.match(/<svg[\s\S]*?<\/svg>/i);
+        return svgMatch ? svgMatch[0] : null;
+    }
+
+    // Fonction pour créer un élément de message dans le chat
+    function createChatMessage(message, role) {
+        return `
+            <div class="chat ${role === "user" ? "chat-start" : "chat-end"}">
+                <div class="chat-bubble ${role === "user" ? "bg-primary text-primary-content" : "bg-secondary text-secondary-content"}">
+                    <pre class="whitespace-pre-wrap">${message}</pre>
+                </div>
+                <div class="chat-footer opacity-60 text-xs mt-1">
+                    ${role}
+                </div>
+            </div>
+        `;
+    }
+
+    // Fonction pour sauvegarder les modifications dans PocketBase
+    async function saveToDatabase(history, svgCode) {
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    history: JSON.stringify(history),
+                    svg_code: svgCode || "",
+                    id: document.querySelector('input[name="id"]').value,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Erreur lors de la sauvegarde");
+            }
+
+            return result;
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde:", error);
+            throw error;
+        }
+    }
+
+    // Écouteur d'événement pour le formulaire de soumission
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault(); // Empêche le rechargement de la page
+        const formData = new FormData(form);
+        const promptText = formData.get("editPrompt");
+
+        if (!promptText || promptText.trim() === "") {
+            alert("Veuillez entrer un prompt.");
+            return;
+        }
+
+        // Désactiver le bouton pendant le traitement
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = "Génération...";
+
+        try {
+            // Créez un objet pour le prompt de l'utilisateur
+            let userPrompt = {
+                role: "user",
+                content: promptText.trim(),
+            };
+
+            // Récupérez l'historique des messages
+            let history = JSON.parse(historyInput.value || "[]");
+
+            // Ajoutez le nouveau prompt à l'historique
+            history.push(userPrompt);
+
+            // Réinitialisez le champ de saisie
+            document.getElementById("prompt-input").value = "";
+
+            // Affichez un indicateur de chargement
+            const loadingIndicator = `<div class="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg mt-4">
+                <span class="loading loading-ring loading-lg"></span>
+                <span class="ml-2 text-yellow-700">Génération du nouveau SVG en cours...</span>
+            </div>`;
+
+            svgPreview.innerHTML += loadingIndicator;
+
+            // Ajoutez le prompt utilisateur à l'historique du chat
+            chatHistory.innerHTML += createChatMessage(
+                userPrompt.content,
+                "user",
+            );
+
+            // Récupérer le SVG actuel pour le passer à l'IA
+            const currentSvgElement = svgDisplay.querySelector("svg");
+            const currentSvgCode = currentSvgElement
+                ? currentSvgElement.outerHTML
+                : "";
+
+            // Appelez la fonction pour générer le nouveau SVG
+            let aiResponse = await generateSVG(userPrompt, currentSvgCode);
+
+            // Ajoutez la réponse de l'IA à l'historique
+            let assistantMessage = {
+                role: "assistant",
+                content: aiResponse,
+            };
+            history.push(assistantMessage);
+
+            // Extraire le nouveau SVG de la réponse
+            const newSvgCode = extractSvgCode(aiResponse);
+
+            if (newSvgCode) {
+                // Mettre à jour l'affichage du SVG
+                svgDisplay.innerHTML = newSvgCode;
+
+                // Mettre à jour l'input hidden pour la sauvegarde
+                svgCodeInput.value = newSvgCode;
+
+                console.log("Nouveau SVG généré:", newSvgCode);
+            } else {
+                console.warn("Aucun code SVG trouvé dans la réponse");
+            }
+
+            // Ajoutez la réponse de l'IA à l'historique du chat
+            chatHistory.innerHTML += createChatMessage(aiResponse, "assistant");
+
+            // Retirez l'indicateur de chargement
+            const loadingElement = svgPreview.querySelector(".bg-yellow-50");
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+
+            // Mettre à jour l'input hidden avec le nouvel historique
+            historyInput.value = JSON.stringify(history);
+
+            // Sauvegarder dans PocketBase
+            await saveToDatabase(history, newSvgCode);
+
+            console.log("SVG et historique sauvegardés avec succès!");
+
+            // Faire défiler vers le bas pour voir les nouveaux messages
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        } catch (error) {
+            console.error("Erreur lors du traitement:", error);
+
+            // Retirez l'indicateur de chargement en cas d'erreur
+            const loadingElement = svgPreview.querySelector(".bg-yellow-50");
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+
+            // Afficher l'erreur à l'utilisateur
+            const errorMessage = `<div class="alert alert-error mt-4">
+                <span>Erreur: ${error.message}</span>
+            </div>`;
+            svgPreview.innerHTML += errorMessage;
+
+            // Supprimer le message d'erreur après 5 secondes
+            setTimeout(() => {
+                const errorElement = svgPreview.querySelector(".alert-error");
+                if (errorElement) {
+                    errorElement.remove();
+                }
+            }, 5000);
+        } finally {
+            // Réactiver le bouton
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        }
+    });
+
+    // Auto-scroll vers le bas au chargement de la page
+    document.addEventListener("DOMContentLoaded", () => {
+        if (chatHistory) {
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    });
+</script>
