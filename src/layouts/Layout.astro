@@ -17,22 +17,35 @@ console.log("Locale in index:", locale);
 	</head>
 	<body class="h-full">
 		<div class="h-full flex flex-col min-h-0">
+			<header
+				class="flex items-center justify-between p-4 bg-purple-200 border-b"
+			>
+				<h1 class="text-lg font-semibold">Menu</h1>
+				<nav class="flex items-center space-x-4">
+					<form method="POST" action={Astro.url.pathname} class="m-0">
+						<select
+							name="language"
+							class="select"
+							onchange="this.form.submit()"
+						>
+							<option disabled selected="true">
+								{ui[locale].nav.language}
+							</option>
+							<option value="en">English</option>
+							<option value="fr">Français</option>
+						</select>
+					</form>
+					<form method="POST" action="/api/logout" class="mx-5">
+						<button type="submit" class="btn btn-primary"
+							>Logout</button
+						>
+					</form>
+				</nav>
+			</header>
+
 			<div class="flex-1 min-h-0">
 				<slot />
 			</div>
 		</div>
-		<form method="POST" action={Astro.url.pathname}>
-			<select
-				name="language"
-				class="select"
-				onchange="this.form.submit()"
-			>
-				<option disabled selected="true"
-					>{ui[locale].nav.language}</option
-				>
-				<option value="en">English</option>
-				<option value="fr">Français</option>
-			</select>
-		</form>
 	</body>
 </html>
