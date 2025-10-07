@@ -1,0 +1,58 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+    <section class="min-h-screen flex items-center justify-center bg-base-200">
+        <div class="card w-full max-w-md bg-base-100 shadow-xl p-8">
+            <h1 class="text-3xl font-bold mb-6 text-center text-primary">
+                Créer un compte
+            </h1>
+
+            <form
+                method="POST"
+                action="/api/signup"
+                class="flex flex-col gap-4"
+            >
+                <label class="form-control">
+                    <span class="label-text mb-1">Adresse email</span>
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="exemple@mail.com"
+                        class="input input-bordered w-full"
+                        required
+                    />
+                </label>
+
+                <label class="form-control">
+                    <span class="label-text mb-1">Mot de passe</span>
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="********"
+                        class="input input-bordered w-full"
+                        required
+                    />
+                </label>
+
+                <label class="form-control">
+                    <span class="label-text mb-1"
+                        >Confirmer le mot de passe</span
+                    >
+                    <input
+                        type="password"
+                        name="passwordConfirm"
+                        placeholder="********"
+                        class="input input-bordered w-full"
+                        required
+                    />
+                </label>
+
+                <button type="submit" class="btn btn-primary mt-4">
+                    Créer un compte
+                </button>
+            </form>
+        </div>
+    </section>
+</Layout>
