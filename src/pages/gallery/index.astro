@@ -15,6 +15,7 @@ let svgs = [];
 try {
     svgs = await pb.collection(Collections.Svg).getFullList(200, {
         sort: "-created",
+        filter: `user = "${Astro.locals.user.id}"`, // Filtre pour n'afficher que les SVGs de l'utilisateur
     });
 } catch (error) {
     console.error("Erreur lors de la récupération des SVGs :", error);
