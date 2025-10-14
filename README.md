@@ -1,6 +1,6 @@
 - Nom: ADAM
 - Prenom: Juline
-- Netlify:
+- Netlify: /
 
 - Pocketbase :
-![collection_users](./assets/collection_users.jpg)
+![collection_users](./src/assets/collection_users.jpg)
