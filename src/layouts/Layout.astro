@@ -18,9 +18,9 @@ console.log("Locale in index:", locale);
 	<body class="h-full">
 		<div class="h-full flex flex-col min-h-0">
 			<header
-				class="flex items-center justify-between p-4 bg-purple-200 border-b"
+				class="flex items-center justify-between p-4 bg-purple-200"
 			>
-				<h1 class="text-lg font-semibold">Menu</h1>
+				<h1 class="text-lg font-semibold"></h1>
 				<nav class="flex items-center space-x-4">
 					<form method="POST" action={Astro.url.pathname} class="m-0">
 						<select
@@ -41,9 +41,7 @@ console.log("Locale in index:", locale);
 						>
 					</form>
 
-					<a href="/signup" class="btn btn-secondary">
-						Sign Up
-					</a>
+					<a href="/signup" class="btn btn-secondary"> Sign Up </a>
 				</nav>
 			</header>
 
